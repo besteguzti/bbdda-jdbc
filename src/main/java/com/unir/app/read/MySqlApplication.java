@@ -18,8 +18,12 @@ public class MySqlApplication {
 
             log.info("Conexión establecida con la base de datos MySQL");
 
-            selectAllEmployeesOfDepartment(connection, "d001");
-            selectAllEmployeesOfDepartment(connection, "d002");
+            //selectAllEmployeesOfDepartment(connection, "d001");
+            //selectAllEmployeesOfDepartment(connection, "d002");
+            //employeesGender(connection);
+            //mejorSalarioDpto(connection,"d004");
+            //mejor2SalarioDpto(connection,"d004");
+            numeroEmpleadosContratados(connection,11);
 
         } catch (Exception e) {
             log.error("Error al tratar con la base de datos", e);
@@ -68,4 +72,80 @@ public class MySqlApplication {
                     employees.getString("Total"));
         }
     }
+
+    private static void employeesGender(Connection connection) throws SQLException {
+        PreparedStatement employeesG = connection.prepareStatement("Select gender, count(*) as Numero from employees group by gender order by Numero DESC");
+        ResultSet employees = employeesG.executeQuery();
+        while (employees.next()) {
+            log.debug("Gender {}: Total: {}",
+            employees.getString("gender"),
+            employees.getInt("Numero"));
+        }
+    }
+
+
+    private static void mejorSalarioDpto(Connection connection,String department) throws SQLException {
+        PreparedStatement employeesG = connection.prepareStatement("SELECT\n" +
+                "    empleados.first_name AS nombre,\n" +
+                "    empleados.last_name AS apellido,\n" +
+                "    salario.salary AS salario,\n" +
+                "    departamento.dept_no AS departamento\n" +
+                "FROM employees.employees AS empleados\n" +
+                "JOIN employees.salaries AS salario ON empleados.emp_no = salario.emp_no\n" +
+                "JOIN employees.dept_emp AS departamento ON empleados.emp_no = departamento.emp_no\n" +
+                "WHERE departamento.dept_no = ?\n" +
+                "ORDER BY salario.salary DESC\n" +
+                "LIMIT 1;");
+
+        employeesG.setString(1, department);
+        ResultSet employees = employeesG.executeQuery();
+
+        while (employees.next()) {
+            log.debug("nombre: {}, apellido:{}, salario: {}",
+                    employees.getString("nombre"),
+                    employees.getString("apellido"),
+                    employees.getInt("salario"));
+        }
+    }
+
+    private static void mejor2SalarioDpto(Connection connection,String department) throws SQLException {
+        PreparedStatement employeesG = connection.prepareStatement("SELECT\n" +
+                "    empleados.first_name AS nombre,\n" +
+                "    empleados.last_name AS apellido,\n" +
+                "    salario.salary AS salario,\n" +
+                "    departamento.dept_no AS departamento\n" +
+                "FROM employees.employees AS empleados\n" +
+                "JOIN employees.salaries AS salario ON empleados.emp_no = salario.emp_no\n" +
+                "JOIN employees.dept_emp AS departamento ON empleados.emp_no = departamento.emp_no\n" +
+                "WHERE departamento.dept_no = ?\n" +
+                "ORDER BY salario.salary DESC\n" +
+                "LIMIT 1\n" +
+                "OFFSET 1;");
+        employeesG.setString(1, department);
+        ResultSet employees = employeesG.executeQuery();
+
+        while (employees.next()) {
+            log.debug("nombre: {}, apellido:{}, salario: {}",
+                    employees.getString("nombre"),
+                    employees.getString("apellido"),
+                    employees.getInt("salario"));
+        }
+    }
+
+    private static void numeroEmpleadosContratados(Connection connection,int month) throws SQLException {
+        PreparedStatement employeesG = connection.prepareStatement("SELECT COUNT(*) AS total_empleados\n" +
+                "FROM employees.employees\n" +
+                "WHERE MONTH(hire_date) = ?;");
+        employeesG.setInt(1, month);
+        ResultSet employees = employeesG.executeQuery();
+
+        while (employees.next()) {
+            log.debug("Total de empleados contratados en el mes {}: {}",
+                    month,
+                    employees.getInt("total_empleados"));
+        }
+
+    }
+
+
 }

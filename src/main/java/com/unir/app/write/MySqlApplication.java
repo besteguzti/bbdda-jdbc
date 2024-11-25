@@ -22,7 +22,7 @@ import java.util.List;
 @Slf4j
 public class MySqlApplication {
 
-    private static final String DATABASE = "employees";
+    private static final String DATABASE = "laboratorio1";
 
     public static void main(String[] args) {
 
@@ -30,7 +30,7 @@ public class MySqlApplication {
         //Try-with-resources. Se cierra la conexión automáticamente al salir del bloque try
         try(Connection connection = new MySqlConnector("localhost", DATABASE).getConnection()) {
 
-            log.warn("Recuerda que el fichero unirEmployees.csv debe estar en la raíz del proyecto, es decir, en la carpeta {}"
+            log.warn("Recuerda que el fichero csv debe estar en la raíz del proyecto, es decir, en la carpeta {}"
                     , System.getProperty("user.dir"));
             log.info("Conexión establecida con la base de datos MySQL");
 
