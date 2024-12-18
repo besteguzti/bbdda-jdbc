@@ -59,7 +59,7 @@ public class MySqlWriteMunicipios {
             while ((nextLine = reader.readNext()) != null) {
                 MySqlMunicipios municipio = new MySqlMunicipios(
                         Integer.parseInt(nextLine[0]), // id_municipio
-                        Integer.parseInt(nextLine[1]), // id_provincia
+                        nextLine[1],                    // provincia
                         nextLine[2]);                    // municipio
 
 
@@ -75,9 +75,9 @@ public class MySqlWriteMunicipios {
     private static void intake(Connection connection, List<MySqlMunicipios> municipios) throws SQLException {
 
         String selectSql = "SELECT COUNT(*) FROM municipios WHERE id_municipio = ?";
-        String insertSql = "INSERT INTO municipios (id_municipio, id_provincia, municipio)"
+        String insertSql = "INSERT INTO municipios (id_municipio, provincia, municipio)"
                 + "VALUES (?, ?, ?)";
-        String updateSql = "UPDATE municipios SET id_municipio = ?, id_provincia = ?, municipio = ?";
+        String updateSql = "UPDATE municipios SET id_municipio = ?, provincia = ?, municipio = ?";
         int batchSize = 5;
         int count = 0;
 
@@ -117,14 +117,14 @@ public class MySqlWriteMunicipios {
 
     private static void fillInsertStatement(PreparedStatement statement, MySqlMunicipios municipio) throws SQLException {
         statement.setInt(1, municipio.getId_municipio());
-        statement.setInt(2, municipio.getId_provincia());
+        statement.setString(2, municipio.getProvincia());
         statement.setString(3, municipio.getMunicipio());
 
     }
 
     private static void fillUpdateStatement(PreparedStatement statement, MySqlMunicipios municipio) throws SQLException {
         statement.setInt(1, municipio.getId_municipio());
-        statement.setInt(2, municipio.getId_provincia());
+        statement.setString(2, municipio.getProvincia());
         statement.setString(3, municipio.getMunicipio());
     }
 }

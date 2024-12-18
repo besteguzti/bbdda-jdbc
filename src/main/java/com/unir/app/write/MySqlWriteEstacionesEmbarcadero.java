@@ -6,15 +6,20 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
 import com.unir.config.MySqlConnector;
 import com.unir.model.MySqlEstaciones;
+import com.unir.model.MySqlEstacionesEmbarcadero;
 import lombok.extern.slf4j.Slf4j;
+
 import java.io.FileReader;
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
 @Slf4j
-public class MySqlWriteEstaciones {
+public class MySqlWriteEstacionesEmbarcadero {
 
     private static final String DATABASE = "laboratorio1";
 
@@ -27,7 +32,7 @@ public class MySqlWriteEstaciones {
             log.info("Conexión establecida con la base de datos MySQL");
 
             // Leemos los datos del fichero CSV
-            List<com.unir.model.MySqlEstaciones> estaciones = readData();
+            List<MySqlEstacionesEmbarcadero> estaciones = readData();
 
             // Introducimos los datos en la base de datos
             intake(connection, estaciones);
@@ -37,32 +42,30 @@ public class MySqlWriteEstaciones {
         }
     }
 
-    private static List<com.unir.model.MySqlEstaciones> readData() {
+    private static List<MySqlEstacionesEmbarcadero> readData() {
 
         try (CSVReader reader = new CSVReaderBuilder(
-                new FileReader("estaciones.csv"))
+                new FileReader("EstacionesEmbarcadero.csv"))
                 .withCSVParser(
                         new CSVParserBuilder()
                                 .withSeparator(';')
                                 .build())
                 .build()) {
 
-            List<com.unir.model.MySqlEstaciones> estaciones = new LinkedList<>();
+            List<MySqlEstacionesEmbarcadero> estaciones = new LinkedList<>();
             reader.skip(1);
             String[] nextLine;
 
             while ((nextLine = reader.readNext()) != null) {
-                MySqlEstaciones estacion = new MySqlEstaciones(
-                        Integer.parseInt(nextLine[0]), // id_estacion
-                        Integer.parseInt(nextLine[1]),//id_localidad
-                        Integer.parseInt(nextLine[2]),// id_precios*/
-                        nextLine[3],                  // direccion
-                        nextLine[4],                  // margen
-                        nextLine[5],                  // rotulo
-                        nextLine[6],                  // tipoVenta
-                        nextLine[7],                  // rem
-                        nextLine[8],                  // horario
-                        nextLine[9]);                 // tipoServicio
+                MySqlEstacionesEmbarcadero estacion = new MySqlEstacionesEmbarcadero(
+                        Integer.parseInt(nextLine[0]), //id_estacion
+                        Integer.parseInt(nextLine[1]), // id_localidad
+                        Integer.parseInt(nextLine[2]), // id_precios
+                        nextLine[3],                   // rotulo
+                        nextLine[4],                  // tipoVenta
+                        nextLine[5],                  // Rem
+                        nextLine[6]);                 // horario
+
                 estaciones.add(estacion);
             }
             return estaciones;
@@ -72,12 +75,12 @@ public class MySqlWriteEstaciones {
         }
     }
 
-    private static void intake(Connection connection, List<com.unir.model.MySqlEstaciones> estaciones) throws SQLException {
+    private static void intake(Connection connection, List<MySqlEstacionesEmbarcadero> estaciones) throws SQLException {
 
         String selectSql = "SELECT COUNT(*) FROM estaciones WHERE id_estacion = ?";
-        String insertSql = "INSERT INTO estaciones (id_estacion, id_localidad,id_precios, direccion, margen, rotulo, tipoVenta, rem, horario, tipoServicio) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        String updateSql = "UPDATE estaciones SET id_localidad = ?, id_precios = ?,direccion = ?, margen = ?, rotulo = ?, tipoVenta = ?, rem = ?, horario = ?, tipoServicio = ? WHERE id_estacion = ?";
+        String insertSql = "INSERT INTO estaciones (id_estacion, id_localidad,id_precios, rotulo, tipoVenta, rem, horario) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String updateSql = "UPDATE estaciones SET id_localidad = ?, id_precios = ?, rotulo = ?, tipoVenta = ?, rem = ?, horario = ? WHERE id_estacion = ?";
         int batchSize = 5;
         int count = 0;
 
@@ -87,7 +90,7 @@ public class MySqlWriteEstaciones {
 
             connection.setAutoCommit(false);
 
-            for (com.unir.model.MySqlEstaciones estacion : estaciones) {
+            for (MySqlEstacionesEmbarcadero estacion : estaciones) {
                 selectStatement.setInt(1, estacion.getId_estacion());
                 try (ResultSet resultSet = selectStatement.executeQuery()) {
                     resultSet.next();
@@ -115,30 +118,25 @@ public class MySqlWriteEstaciones {
         }
     }
 
-    private static void fillInsertStatement(PreparedStatement statement, com.unir.model.MySqlEstaciones estacion) throws SQLException {
+    private static void fillInsertStatement(PreparedStatement statement, MySqlEstacionesEmbarcadero estacion) throws SQLException {
         statement.setInt(1, estacion.getId_estacion());
         statement.setInt(2, estacion.getId_localidad());
         statement.setInt(3, estacion.getId_precios());
-        statement.setString(4, estacion.getDireccion());
-        statement.setString(5, estacion.getMargen());
-        statement.setString(6, estacion.getRotulo());
-        statement.setString(7, estacion.getTipoVenta());
-        statement.setString(8, estacion.getRem());
-        statement.setString(9, estacion.getHorario());
-        statement.setString(10, estacion.getTipoServicio());
+        statement.setString(4, estacion.getRotulo());
+        statement.setString(5, estacion.getTipoVenta());
+        statement.setString(6, estacion.getRem());
+        statement.setString(7, estacion.getHorario());
     }
 
-    private static void fillUpdateStatement(PreparedStatement statement, com.unir.model.MySqlEstaciones estacion) throws SQLException {
+    private static void fillUpdateStatement(PreparedStatement statement, MySqlEstacionesEmbarcadero estacion) throws SQLException {
         statement.setInt(1, estacion.getId_estacion());
         statement.setInt(2, estacion.getId_localidad());
         statement.setInt(3, estacion.getId_precios());
-        statement.setString(4, estacion.getDireccion());
-        statement.setString(5, estacion.getMargen());
-        statement.setString(6, estacion.getRotulo());
-        statement.setString(7, estacion.getTipoVenta());
-        statement.setString(8, estacion.getRem());
-        statement.setString(9, estacion.getHorario());
-        statement.setString(10, estacion.getTipoServicio());
+        statement.setString(4, estacion.getRotulo());
+        statement.setString(5, estacion.getTipoVenta());
+        statement.setString(6, estacion.getRem());
+        statement.setString(7, estacion.getHorario());
+
     }
 }
 

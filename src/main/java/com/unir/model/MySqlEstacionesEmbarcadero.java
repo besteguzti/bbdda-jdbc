@@ -5,15 +5,12 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class MySqlEstaciones {
+public class MySqlEstacionesEmbarcadero {
     private int id_localidad;
     private int id_estacion;
     private int id_precios;
-    private String direccion;
-    private String margen;
     private String rotulo;
     private String tipoVenta;
     private String rem;
     private String horario;
-    private String tipoServicio;
 }
